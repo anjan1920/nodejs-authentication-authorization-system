@@ -9,7 +9,7 @@ export  async function apiRequest(url, options = {}) {
 
   if (res.status === 401) {
     //fetch
-    await fetch("http://127.0.0.1:5600/api/v1/auth/refresh-token", {
+    await fetch("https://auth-system-backend-fdwu.onrender.com/api/v1/auth/refresh-token", {
       method: "POST",
       credentials: "include"
     });

@@ -1,5 +1,7 @@
 console.log("Reset Password JS loaded");
 
+import { withTimeout } from "./timeout.js"
+
 const form = document.getElementById("resetForm");
 const newPasswordInput = document.getElementById("newPassword");
 const confirmPasswordInput = document.getElementById("confirmPassword");
@@ -17,11 +19,14 @@ const token = params.get("token");
 if (!token) {
   message.innerText = "Invalid reset link.";
   message.className = "text-red-400";
+  submitBtn.disabled = true; // added (prevent submit)
 }
 
 
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
+
+  if (!token) return; // added safety
 
   const newPassword = newPasswordInput.value.trim();
   const confirmPassword = confirmPasswordInput.value.trim();
@@ -38,15 +43,21 @@ form.addEventListener("submit", async (e) => {
     submitBtn.disabled = true;
     message.innerText = "";
 
-    const res = await fetch(`http://127.0.0.1:5600/api/v1/auth/reset-password/${token}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ newPassword })
-    });
+    const res = await withTimeout(
+      fetch(`https://auth-system-backend-fdwu.onrender.com/api/v1/auth/reset-password/${token}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ newPassword })
+      }),
+      10000 // timeout added
+    );
 
-    const data = await res.json();
+    let data = {};
+    try {
+      data = await res.json();
+    } catch {}
 
     if (res.ok) {
       message.innerText = "Password reset successful. Redirecting to login...";
@@ -65,7 +76,14 @@ form.addEventListener("submit", async (e) => {
 
     console.error(error);
 
-    message.innerText = "Something went wrong.";
+    if (error.message === "TIMEOUT") {
+      message.innerText = "Server taking too long. Try again.";
+    } else if (error.message === "NETWORK") {
+      message.innerText = "Check your internet connection.";
+    } else {
+      message.innerText = "Something went wrong.";
+    }
+
     message.className = "text-red-400";
 
   } finally {

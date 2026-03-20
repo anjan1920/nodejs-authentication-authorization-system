@@ -1,105 +1,137 @@
-// handle login page logic
 console.log("Login page loaded");
-import { apiRequest } from "./api.js";
-
-
+import { apiRequest } from "./api.js"; 
+import { withTimeout } from "./timeout.js";
 
 const loader = document.getElementById("loader");
-
+const errorBox = document.getElementById("errorMsg");
 
 function init() {
   showLoader();
-  //try to initialize with current user
-  
   checkAuth();
 }
-
 init();
+
 
 async function checkAuth() {
   try {
     console.log("Checking logged in user...");
 
-    const res = await apiRequest(
-      "http://127.0.0.1:5600/api/v1/auth/current-user",
-      {
-        method: "GET",
-        credentials: "include"
-      }
+    const res = await withTimeout(
+      apiRequest(
+        "https://auth-system-backend-fdwu.onrender.com/api/v1/auth/current-user",
+        {
+          method: "GET",
+          credentials: "include",
+        }
+      ),
+      8000
     );
 
-    if (!res.ok){
-      hideLoader();
-      return;
-      
-    }
+    if (!res.ok) return;
 
-    const data = await res.json();
-
-    if (!data.success){
-      hideLoader();
+    let data;
+    try {
+      data = await res.json();
+    } catch {
       return;
     }
 
-    redirectToDashboard();
+    if (data?.success) {
+      redirectToDashboard();
+    }
 
   } catch (error) {
+    if (error.message === "TIMEOUT") {
+      showError("Server is taking too long. Try again.");
+    } else {
+      console.log("User not logged in");
+    }
+  } finally {
     hideLoader();
-    console.log("User not logged in");
   }
 }
 
 
 
-document.getElementById("loginForm").addEventListener("submit", handleLoginSubmit);
+
+document
+  .getElementById("loginForm")
+  .addEventListener("submit", handleLoginSubmit);
 
 async function handleLoginSubmit(e) {
   e.preventDefault();
+  clearError();
 
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
 
-  console.log(`email and pass ${email}, ${password}`);
-
   await loginUser(email, password);
 }
 
+
+
 async function loginUser(email, password) {
   try {
+    showLoader();
 
-    const res = await fetch("http://127.0.0.1:5600/api/v1/auth/login", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      credentials: "include", // important for cookie auth
-      body: JSON.stringify({ email, password })
-    });
+    const res = await withTimeout(
+      apiRequest(
+        "https://auth-system-backend-fdwu.onrender.com/api/v1/auth/login",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({ email, password }),
+        }
+      ),
+      10000
+    );
 
-    const data = await res.json();
-    console.log(data);
+    let data = {};
+    try {
+      data = await res.json();
+    } catch {}
 
     if (!res.ok) {
-      showError(data.message || "Login failed");
+      showError(data.message || "Invalid credentials");
       return;
     }
 
-    // cookie already set by backend
     redirectToDashboard();
 
   } catch (err) {
+    if (err.message === "TIMEOUT") {
+      showError("Server is slow (cold start). Try again.");
+    } else if (err.message === "NETWORK") {
+      showError("Check your internet connection.");
+    } else {
+      showError("Something went wrong");
+    }
+
     console.error(err);
-    showError("Server error");
+  } finally {
+    hideLoader();
   }
 }
+
+
 
 function redirectToDashboard() {
   window.location.href = "./dashboard.html";
 }
 
 function showError(message) {
-  document.getElementById("errorMsg").innerText = message;
+  errorBox.innerText = message;
+  errorBox.classList.remove("hidden");
 }
+
+function clearError() {
+  errorBox.innerText = "";
+  errorBox.classList.add("hidden");
+}
+
 function showLoader() {
   loader.classList.remove("hidden");
 }
@@ -107,7 +139,3 @@ function showLoader() {
 function hideLoader() {
   loader.classList.add("hidden");
 }
-
-
-
-

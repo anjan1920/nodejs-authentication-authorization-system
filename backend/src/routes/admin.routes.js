@@ -12,7 +12,7 @@ const router = Router();
 router.route("/healthcheck").get(
   (req, res, next) => {
     console.log("Incoming admin health check request...");
-    next(); // Move to userRegisterValidator
+    next(); 
   },
   verifyJWT,
   verifyRole("admin"),
@@ -24,7 +24,7 @@ router.route("/healthcheck").get(
 router.route("/getAllUsers").get(
   (req, res, next) => {
     console.log("Incoming admin user count request...");
-    next(); // Move to userRegisterValidator
+    next(); 
   },
   verifyJWT,
   verifyRole("admin"),
@@ -34,7 +34,7 @@ router.route("/getAllUsers").get(
 router.route("/login").post(
   (req, res, next) => {
     console.log("Incoming admin login request...");
-    next(); // Move to userRegisterValidator
+    next(); 
   },
   adminLogin
 );

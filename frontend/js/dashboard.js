@@ -9,6 +9,7 @@ window.addEventListener("pageshow", function (event) {
 console.log("Dashboard js loaded");
 
 import { apiRequest } from "./api.js";
+import { withTimeout } from "./timeout.js"; 
 
 const usernameEl = document.getElementById("username");
 const emailEl = document.getElementById("email");
@@ -31,16 +32,23 @@ async function loadUser() {
   try {
     console.log("Loading current user..");
     
-    const res = await apiRequest(//wrap with apiRequest its handle access token expiry and call 
-      //refresh access token then using new access token its again call this current user 
-      "http://127.0.0.1:5600/api/v1/auth/current-user",
-      {
-        method: "GET",
-        credentials: "include"
-      }
+    const res = await withTimeout(
+      apiRequest(//wrap with apiRequest its handle access token expiry and call 
+        //refresh access token then using new access token its again call this current user 
+        "https://auth-system-backend-fdwu.onrender.com/api/v1/auth/current-user",
+        {
+          method: "GET",
+          credentials: "include"
+        }
+      ),
+      8000 // timeout added
     );
 
-    const data = await res.json();
+    let data = {};
+    try {
+      data = await res.json();
+    } catch {}
+
     console.log(data);
 
     if (!res.ok || !data.success) {
@@ -72,11 +80,14 @@ logoutBtn?.addEventListener("click", async () => {
     logoutBtn.disabled = true;
     logoutBtn.textContent = "Logging out...";
 
-    await apiRequest(
-      "http://127.0.0.1:5600/api/v1/auth/logout",
-      {
-        method: "POST"
-      }
+    await withTimeout(
+      apiRequest(
+        "https://auth-system-backend-fdwu.onrender.com/api/v1/auth/logout",
+        {
+          method: "POST"
+        }
+      ),
+      8000
     );
 
     setTimeout(() => {
@@ -111,24 +122,30 @@ changePasswordBtn?.addEventListener("click", async () => {
     changePasswordBtn.disabled = true;
     changePasswordBtn.textContent = "Updating...";
 
-    const res = await apiRequest(
-      "http://127.0.0.1:5600/api/v1/auth/change-password",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          oldPassword,
-          newPassword
-        })
-      }
+    const res = await withTimeout(
+      apiRequest(
+        "https://auth-system-backend-fdwu.onrender.com/api/v1/auth/change-password",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            oldPassword,
+            newPassword
+          })
+        }
+      ),
+      10000
     );
 
-    const data = await res.json();
+    let data = {};
+    try {
+      data = await res.json();
+    } catch {}
 
     if (!res.ok) {
-      alert(data.message);
+      alert(data.message || "Failed to change password");
       return;
     }
 
@@ -140,6 +157,7 @@ changePasswordBtn?.addEventListener("click", async () => {
   } catch (error) {
 
     console.error("Change password error:", error);
+    alert("Something went wrong");
 
   } finally {
 
@@ -169,23 +187,29 @@ deleteAccountBtn?.addEventListener("click", async () => {
     deleteAccountBtn.disabled = true;
     deleteAccountBtn.textContent = "Deleting...";
 
-    const res = await apiRequest(
-      "http://127.0.0.1:5600/api/v1/auth/delete-me",
-      {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          password
-        })
-      }
+    const res = await withTimeout(
+      apiRequest(
+        "https://auth-system-backend-fdwu.onrender.com/api/v1/auth/delete-me",
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            password
+          })
+        }
+      ),
+      10000
     );
 
-    const data = await res.json();
+    let data = {};
+    try {
+      data = await res.json();
+    } catch {}
 
     if (!res.ok) {
-      alert(data.message);
+      alert(data.message || "Failed to delete account");
       deleteAccountBtn.disabled = false;
       deleteAccountBtn.textContent = "Delete Account";
       return;
@@ -196,6 +220,8 @@ deleteAccountBtn?.addEventListener("click", async () => {
     window.location.replace("./register.html");
 
   } catch (error) {
+
+    console.error("Delete account error:", error);
 
     deleteAccountBtn.disabled = false;
     deleteAccountBtn.textContent = "Delete Account";

@@ -38,6 +38,8 @@ app.get("/", (req, res) => {
   res.send("Welcome to Home");
 });
 
+
+//force server to remove cache
 app.use((req, res, next) => {
   res.setHeader(
     "Cache-Control",

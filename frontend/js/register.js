@@ -1,5 +1,6 @@
 console.log("Register js loaded");
 
+import { withTimeout } from "./timeout.js";
 const form = document.getElementById("registerForm");
 const btnText = document.getElementById("btnText");
 const loader = document.getElementById("loader");
@@ -27,19 +28,25 @@ form.addEventListener("submit", async (e) => {
 
   try {
 
-    const res = await fetch("http://127.0.0.1:5600/api/v1/auth/register", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        username,
-        email,
-        password
-      })
-    });
+    const res = await withTimeout(
+      fetch("https://auth-system-backend-fdwu.onrender.com/api/v1/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          username,
+          email,
+          password
+        })
+      }),
+      10000 // timeout added
+    );
 
-    const data = await res.json();
+    let data = {};
+    try {
+      data = await res.json();
+    } catch {}
 
     if(res.ok){
 
@@ -53,37 +60,58 @@ form.addEventListener("submit", async (e) => {
       message.textContent = "Didn't receive email? Click below to resend.";
 
     }else{
-      document.getElementById("errorMsg").textContent = data.message;
+      document.getElementById("errorMsg").textContent = data.message || "Registration failed";
     }
 
   } catch (err) {
-    document.getElementById("errorMsg").textContent = "Something went wrong";
-  }
 
-  btnText.textContent = "Register";
-  loader.classList.add("hidden");
-  btn.disabled = false;
+    console.error(err);
+
+    if (err.message === "TIMEOUT") {
+      document.getElementById("errorMsg").textContent = "Server taking too long. Try again.";
+    } else if (err.message === "NETWORK") {
+      document.getElementById("errorMsg").textContent = "Check your internet connection.";
+    } else {
+      document.getElementById("errorMsg").textContent = "Something went wrong";
+    }
+
+  } finally {
+    btnText.textContent = "Register";
+    loader.classList.add("hidden");
+    btn.disabled = false;
+  }
 
 });
 
 
 resendBtn.addEventListener("click", async () => {
 
+  if (!userEmail) {
+    message.textContent = "Email not found. Please register again.";
+    return;
+  }
+
   message.textContent = "Sending verification email again...";
 
   try {
 
-    const response = await fetch("http://127.0.0.1:5600/api/v1/auth/resend-verification", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        email: userEmail
-      })
-    });
+    const response = await withTimeout(
+      fetch("https://auth-system-backend-fdwu.onrender.com/api/v1/auth/resend-verification", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          email: userEmail
+        })
+      }),
+      8000 // timeout added
+    );
 
-    const data = await response.json();
+    let data = {};
+    try {
+      data = await response.json();
+    } catch {}
 
     if(response.ok){
       message.textContent = "Verification email sent again. Check your inbox.";
@@ -92,7 +120,16 @@ resendBtn.addEventListener("click", async () => {
     }
 
   } catch (error) {
-    message.textContent = "Something went wrong.";
+
+    console.error(error);
+
+    if (error.message === "TIMEOUT") {
+      message.textContent = "Server slow. Try again.";
+    } else if (error.message === "NETWORK") {
+      message.textContent = "Check your connection.";
+    } else {
+      message.textContent = "Something went wrong.";
+    }
   }
 
 });

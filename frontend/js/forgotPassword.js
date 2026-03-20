@@ -1,5 +1,7 @@
 console.log("Forgot Password JS loaded");
 
+import { withTimeout } from "./timeout.js";
+
 const form = document.getElementById("forgotForm");
 const emailInput = document.getElementById("email");
 const loading = document.getElementById("loading");
@@ -25,16 +27,21 @@ form.addEventListener("submit", async (e) => {
     submitBtn.disabled = true;
     message.innerText = "";
 
-    const res = await fetch("http://127.0.0.1:5600/api/v1/auth/forgot-password", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ email })
-    });
+    const res = await withTimeout(
+      fetch("https://auth-system-backend-fdwu.onrender.com/api/v1/auth/forgot-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ email })
+      }),
+      10000 // timeout added
+    );
 
-    const data = await res.json();
-    
+    let data = {};
+    try {
+      data = await res.json();
+    } catch {}
 
     if (res.ok) {
       message.innerText = "Reset link sent to your email.";
@@ -47,8 +54,17 @@ form.addEventListener("submit", async (e) => {
 
   } catch (error) {
     console.error(error);
-    message.innerText = "Something went wrong.";
+
+    if (error.message === "TIMEOUT") {
+      message.innerText = "Server taking too long. Try again.";
+    } else if (error.message === "NETWORK") {
+      message.innerText = "Check your internet connection.";
+    } else {
+      message.innerText = "Something went wrong.";
+    }
+
     message.className = "text-red-400 text-center mt-4";
+
   } finally {
     loading.classList.add("hidden");
     submitBtn.disabled = false;

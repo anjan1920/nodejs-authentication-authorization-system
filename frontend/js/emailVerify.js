@@ -1,5 +1,7 @@
 console.log("email verify loaded");
 
+import { withTimeout } from "./timeout.js"; 
+
 const resultDiv = document.getElementById("result");
 const loadingDiv = document.getElementById("loading");
 
@@ -20,9 +22,16 @@ async function verifyEmail() {
   try {
     console.log("fetching server..");
     
-    const res = await fetch(`http://127.0.0.1:5600/api/v1/auth/verify-email/${token}`);
+    const res = await withTimeout(
+      fetch(`https://auth-system-backend-fdwu.onrender.com/api/v1/auth/verify-email/${token}`),
+      10000 // timeout added
+    );
 
-    const data = await res.json();
+    let data = {};
+    try {
+      data = await res.json();
+    } catch {}
+
     console.log(data);
     
 
@@ -46,7 +55,7 @@ async function verifyEmail() {
 
       resultDiv.innerHTML = `
         <p class="text-red-400">
-        ${data.message}
+        ${data.message || "Verification failed"}
         </p>
       `;
 
@@ -54,14 +63,30 @@ async function verifyEmail() {
 
   } catch (error) {
 
+    console.error(error);
+
     loadingDiv.style.display = "none";
     resultDiv.classList.remove("hidden");
 
-    resultDiv.innerHTML = `
-      <p class="text-red-400">
-      Verification failed. Try again later.
-      </p>
-    `;
+    if (error.message === "TIMEOUT") {
+      resultDiv.innerHTML = `
+        <p class="text-red-400">
+        Server taking too long. Try again.
+        </p>
+      `;
+    } else if (error.message === "NETWORK") {
+      resultDiv.innerHTML = `
+        <p class="text-red-400">
+        Check your internet connection.
+        </p>
+      `;
+    } else {
+      resultDiv.innerHTML = `
+        <p class="text-red-400">
+        Verification failed. Try again later.
+        </p>
+      `;
+    }
   }
 
 }

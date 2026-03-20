@@ -1,5 +1,5 @@
 
-// prevent showing cached dashboard after logout
+// Prevent cached dashboard from showing after logout
 window.addEventListener("pageshow", function (event) {
   if (event.persisted || performance.getEntriesByType("navigation")[0]?.type === "back_forward") {
     window.location.reload();
@@ -9,14 +9,11 @@ window.addEventListener("pageshow", function (event) {
 console.log("Admin dashboard loaded");
 
 import { apiRequest } from "./api.js";
+import { withTimeout } from "./timeout.js"; // Imported timeout utility for handling requests
 
 const adminName = document.getElementById("adminName");
 const displayBox = document.getElementById("displayBox");
 const pageBody = document.getElementById("pageBody");
-
-
-
-
 
 init();
 
@@ -27,12 +24,15 @@ async function init() {
 async function loadAdmin() {
   try {
 
-    const res = await apiRequest(
-      "http://127.0.0.1:5600/api/v1/auth/current-user",
-      {
-        method: "GET",
-        credentials: "include"
-      }
+    const res = await withTimeout(
+      apiRequest(
+        "https://auth-system-backend-fdwu.onrender.com/api/v1/auth/current-user",
+        {
+          method: "GET",
+          credentials: "include"
+        }
+      ),
+      8000 // timeout added
     );
 
     if (!res.ok) {
@@ -40,22 +40,24 @@ async function loadAdmin() {
       return;
     }
 
-    const data = await res.json();
+    let data = {};
+    try {
+      data = await res.json();
+    } catch {}
 
     // show dashboard only after auth success
     pageBody.classList.remove("hidden");
 
     console.log(data);
 
-    adminName.innerText = `Welcome ${data.data.username || "Admin"}`;
+    adminName.innerText = `Welcome ${data.data?.username || "Admin"}`;
 
   } catch (error) {
     window.location.href = "./admin-login.html";
   }
 }
 
-/* ================= SERVER HEALTH ================= */
-
+//Server Health Check Section
 document
   .getElementById("serverHealthBtn")
   .addEventListener("click", checkServerHealth);
@@ -66,9 +68,12 @@ async function checkServerHealth() {
 
   try {
 
-    const res = await apiRequest(
-      "http://127.0.0.1:5600/api/v1/admin/healthcheck",
-      { method: "GET", credentials: "include" }
+    const res = await withTimeout(
+      apiRequest(
+        "https://auth-system-backend-fdwu.onrender.com/api/v1/admin/healthcheck",
+        { method: "GET", credentials: "include" }
+      ),
+      8000
     );
 
     if (!res.ok) {
@@ -78,7 +83,10 @@ async function checkServerHealth() {
       return;
     }
 
-    const data = await res.json();
+    let data = {};
+    try {
+      data = await res.json();
+    } catch {}
 
     await delay(500);
 
@@ -87,11 +95,11 @@ async function checkServerHealth() {
     displayBox.innerHTML = `
       <h3 class="text-lg font-semibold mb-3">Server Health</h3>
 
-      <p><b>Status:</b> ${health.status?.server || "Running"}</p>
-      <p><b>Message:</b> ${health.message}</p>
-      <p><b>Uptime:</b> ${health.uptime}</p>
-      <p><b>Timestamp:</b> ${health.timestamp}</p>
-      <p><b>Memory used:</b> ${health.status?.memory_used_percent || "N/A"}%</p>
+      <p><b>Status:</b> ${health?.status?.server || "Running"}</p>
+      <p><b>Message:</b> ${health?.message}</p>
+      <p><b>Uptime:</b> ${health?.uptime}</p>
+      <p><b>Timestamp:</b> ${health?.timestamp}</p>
+      <p><b>Memory used:</b> ${health?.status?.memory_used_percent || "N/A"}%</p>
     `;
 
   } catch (error) {
@@ -103,8 +111,7 @@ async function checkServerHealth() {
   }
 }
 
-/* ================= USERS ================= */
-
+//users Management Section
 document
   .getElementById("checkUsersBtn")
   .addEventListener("click", loadUsers);
@@ -115,9 +122,12 @@ async function loadUsers() {
 
   try {
 
-    const res = await apiRequest(
-      "http://127.0.0.1:5600/api/v1/admin/getAllUsers",
-      { method: "GET", credentials: "include" }
+    const res = await withTimeout(
+      apiRequest(
+        "https://auth-system-backend-fdwu.onrender.com/api/v1/admin/getAllUsers",
+        { method: "GET", credentials: "include" }
+      ),
+      10000
     );
 
     if (!res.ok) {
@@ -127,7 +137,10 @@ async function loadUsers() {
       return;
     }
 
-    const data = await res.json();
+    let data = {};
+    try {
+      data = await res.json();
+    } catch {}
 
     await delay(500);
 
@@ -170,8 +183,7 @@ async function loadUsers() {
   }
 }
 
-/* ================= CHANGE PASSWORD ================= */
-
+//change Password Section
 document
   .getElementById("changePasswordBtn")
   .addEventListener("click", changePassword);
@@ -188,20 +200,26 @@ async function changePassword() {
 
   try {
 
-    const res = await apiRequest(
-      "http://127.0.0.1:5600/api/v1/auth/change-password",
-      {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          oldPassword,
-          newPassword
-        })
-      }
+    const res = await withTimeout(
+      apiRequest(
+        "https://auth-system-backend-fdwu.onrender.com/api/v1/auth/change-password",
+        {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            oldPassword,
+            newPassword
+          })
+        }
+      ),
+      10000
     );
 
-    const data = await res.json();
+    let data = {};
+    try {
+      data = await res.json();
+    } catch {}
 
     if (!res.ok) {
       alert(data.message || "Password change failed");
@@ -218,7 +236,7 @@ async function changePassword() {
   }
 }
 
-/* ================= LOGOUT ================= */
+//login
 
 document
   .getElementById("logoutBtn")
@@ -228,12 +246,15 @@ async function logoutAdmin() {
 
   try {
 
-    const res = await apiRequest(
-      "http://127.0.0.1:5600/api/v1/auth/logout",
-      {
-        method: "POST",
-        credentials: "include"
-      }
+    const res = await withTimeout(
+      apiRequest(
+        "https://auth-system-backend-fdwu.onrender.com/api/v1/auth/logout",
+        {
+          method: "POST",
+          credentials: "include"
+        }
+      ),
+      8000
     );
 
     if (!res.ok) {
@@ -251,8 +272,7 @@ async function logoutAdmin() {
   }
 }
 
-/* ================= DELETE ACCOUNT ================= */
-
+//delete Account Section
 document
   .getElementById("deleteAccountBtn")
   .addEventListener("click", deleteAccount);
@@ -271,14 +291,17 @@ async function deleteAccount() {
 
   try {
 
-    const res = await apiRequest(
-      "http://127.0.0.1:5600/api/v1/delete-me",
-      {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password })
-      }
+    const res = await withTimeout(
+      apiRequest(
+        "https://auth-system-backend-fdwu.onrender.com/api/v1/delete-me",
+        {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ password })
+        }
+      ),
+      10000
     );
 
     if (!res.ok) {
@@ -297,8 +320,7 @@ async function deleteAccount() {
   }
 }
 
-/* ================= UI HELPERS ================= */
-
+// Helper Functions
 function showBoxLoader(message = "Loading...") {
 
   displayBox.classList.remove("hidden");

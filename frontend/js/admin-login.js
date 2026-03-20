@@ -2,6 +2,7 @@
 console.log("Admin login page loaded");
 
 import { apiRequest } from "./api.js";
+import { withTimeout } from "./timeout.js"; // added for timeout handling
 
 const loader = document.getElementById("loader");
 
@@ -16,31 +17,42 @@ async function checkAuth() {
   try {
     console.log("Checking logged in admin...");
 
-    const res = await apiRequest(
-      "http://127.0.0.1:5600/api/v1/auth/current-user",
-      {
-        method: "GET",
-        credentials: "include"
-      }
+    const res = await withTimeout(
+      apiRequest(
+        "https://auth-system-backend-fdwu.onrender.com/api/v1/auth/current-user",
+        {
+          method: "GET",
+          credentials: "include"
+        }
+      ),
+      8000 // timeout added
     );
 
     if (!res.ok) {
-      hideLoader();
       return;
     }
 
-    const data = await res.json();
+    let data;
+    try {
+      data = await res.json();
+    } catch {
+      return;
+    }
 
     if (!data.success) {
-      hideLoader();
       return;
     }
 
     redirectToDashboard();
 
   } catch (error) {
+    if (error.message === "TIMEOUT") {
+      showError("Server taking too long (cold start)");
+    } else {
+      console.log("Admin not logged in");
+    }
+  } finally {
     hideLoader();
-    console.log("Admin not logged in");
   }
 }
 
@@ -58,19 +70,31 @@ async function handleLoginSubmit(e) {
 }
 
 
+
 async function loginAdmin(email, password) {
   try {
+    showLoader();
 
-    const res = await fetch("http://127.0.0.1:5600/api/v1/admin/login", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      credentials: "include",
-      body: JSON.stringify({ email, password })
-    });
+    const res = await withTimeout(
+      apiRequest(
+        "https://auth-system-backend-fdwu.onrender.com/api/v1/admin/login",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          credentials: "include",
+          body: JSON.stringify({ email, password })
+        }
+      ),
+      10000 // login timeout
+    );
 
-    const data = await res.json();
+    let data = {};
+    try {
+      data = await res.json();
+    } catch {}
+
     console.log(data);
 
     if (!res.ok) {
@@ -81,8 +105,17 @@ async function loginAdmin(email, password) {
     redirectToDashboard();
 
   } catch (err) {
+    if (err.message === "TIMEOUT") {
+      showError("Server slow, try again");
+    } else if (err.message === "NETWORK") {
+      showError("Check internet connection");
+    } else {
+      showError("Server error");
+    }
+
     console.error(err);
-    showError("Server error");
+  } finally {
+    hideLoader(); // added for proper cleanup
   }
 }
 
