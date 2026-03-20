@@ -1,564 +1,183 @@
-# Authentication & Authorization System -- Technical Documentation
 
-This document explains **how the system works internally** so that when
-the project is reopened later it is easy to understand the flow of
-routes, middleware, controllers, and database interactions.
 
----
+## 📌 Auth System 
 
-# 1. Project Overview
+### 1. Overview
 
-This project is a backend authentication and authorization system built
-using:
-
-- Node.js
-- Express.js
-- MongoDB
-- JWT Authentication
-- Nodemailer
-
-Main features:
-
-- User Registration
-- Email Verification
-- Login with JWT
-- Refresh Token System
-- Forgot Password / Reset Password
-- Role Based Authorization
-- Admin Protected Routes
+Node.js + Express + MongoDB + JWT + Nodemailer
+Features: Register, Email verify, Login, Refresh token, Forgot/Reset password, Roles, Admin routes
 
 ---
 
-# 2. High Level Architecture
+### 2. Architecture
 
-Client ↓ Express Server ↓ Route Layer ↓ Middleware Layer (Validation /
-Authentication / Authorization) ↓ Controller Layer ↓ Database (MongoDB)
-↓ Response to Client
+Client → Express → Routes → Middleware → Controller → DB → Response
 
 ---
 
-# 3. Server Startup Flow
+### 3. Server Start
 
-Server is started using:
-
-node index.js
-
-Flow:
-
-index.js → connectDB() → app.listen() → server starts listening for
-requests
-
-After this, all requests are handled by **app.js**.
-
-Request lifecycle:
-
-Client Request → app.js → Route File → Middleware → Controller →
-Database → Response
+`index.js → connectDB → app.listen`
+All requests handled by `app.js`
 
 ---
 
-# 4. Project Folder Structure
+### 4. Folder Structure
 
-backend
-│
-├── src
-│   │
-│   ├── controllers              # business logic for routes
-│   │   ├── admin.Controller.Login.js
-│   │   ├── auth.controllers.js
-│   │   ├── getAllUsers.controllers.js
-│   │
-│   │
-│   ├── db
-│   │   └── index.js              # MongoDB connection setup
-│   │
-│   ├── middlewares               # authentication & validation middlewares
-│   │   ├── auth.middleware.js
-│   │   ├── role.middleware.js
-│   │   └── validator.middleware.js
-│   │
-│   ├── models
-│   │   └── user.models.js        # user schema
-│   │
-│   ├── routes                    # API route definitions
-│   │   ├── admin.routes.js
-│   │   ├── auth.routes.js
-│   │   └── healthcheck.routes.js
-│   │
-│   ├── utils                     # reusable helpers
-│   │   ├── api-error.js
-│   │   ├── api-response.js
-│   │   ├── async-handler.js
-│   │   └── mail.js
-│   │
-│   └── validators
-│       └── index.js              # request validation rules
-│
-├── app.js                        # express app configuration
-├── index.js                      # server entry point
-└── .env                          # environment variables
-
+* controllers → logic
+* db → MongoDB connection
+* middlewares → auth, role, validation
+* models → user schema
+* routes → API endpoints
+* utils → helpers
+* validators → request rules
+* app.js → config
+* index.js → entry
 
 ---
 
-# 5. Request Lifecycle
+### 5. Request Flow
 
-General request flow inside the system:
-
-Client Request → app.js → Route File → Validation Middleware →
-Authentication Middleware → Authorization Middleware → Controller →
-Database Operation → Response Sent
+Client → Route → Validation → Auth → Role → Controller → DB → Response
 
 ---
 
-# 6. Middleware System
+### 6. Middleware
 
-Middleware runs before the controller and processes the request.
+**verifyJWT (Auth)**
 
-## verifyJWT (Authentication)
+* Get token (cookie/header)
+* Verify JWT
+* Get user → attach `req.user`
 
-Purpose: Authenticate user using JWT access token.
+👉 Auth = Who you are
 
-Flow:
+**verifyRole (Authorization)**
 
-Extract token from:
-
-cookies → accessToken
-
-OR
-
-Authorization Header → Bearer token
-
-Then:
-
-jwt.verify(token, ACCESS_TOKEN_SECRET)
-
-After verification:
-
-Decode payload
-
-Get userId
-
-Find user from database
-
-Attach user to request:
-
-req.user = user
-
-Call next()
-
-Meaning:
-
-Authentication = "Who are you"
+* Check `req.user.role`
+  👉 Authorization = What you can access
 
 ---
 
-## verifyRole (Authorization)
+### 7. Register
 
-Purpose: Allow only specific roles to access route.
+POST `/auth/register`
 
-Example:
-
-verifyRole("admin")
-
-Flow:
-
-Check:
-
-req.user.role === "admin"
-
-If role matches:
-
-next()
-
-Otherwise:
-
-Access denied
-
-Meaning:
-
-Authorization = "Are you allowed"
+* Check user exists
+* Create user (not verified)
+* Generate token
+* Store hashed token
+* Send email
 
 ---
 
-# 7. Registration Flow
+### 8. Email Verify
 
-Endpoint:
+POST `/verify-email/:token`
 
-POST /api/v1/auth/register
-
-Flow:
-
-Client Request → auth.route.js → validation middleware → register
-controller
-
-Controller logic:
-
-Extract email, username, password
-
-Check existing user:
-
-\$or : \[email, username\]
-
-If exists:
-
-Return 409 Conflict
-
-If not exists:
-
-Create user with
-
-isEmailVerified = false
-
-Generate email verification token.
-
-Token function returns:
-
-rawToken → send to user
-
-hashedToken → store in database
-
-expiryTime
-
-Store in DB:
-
-emailVerificationToken
-
-emailVerificationExpiry
-
-Send email using nodemailer.
-
-Return response:
-
-User registered successfully.
+* Hash token
+* Find user
+* Mark verified
 
 ---
 
-# 8. Email Verification Flow
+### 9. Login
 
-User receives verification email.
+POST `/auth/login`
 
-Flow:
-
-User clicks verification link → React page loads → token read from URL
-
-Client calls:
-
-POST /api/v1/auth/verify-email/:token
-
-Server logic:
-
-Extract token
-
-Hash token
-
-Search user where:
-
-emailVerificationToken = hashedToken
-
-If found:
-
-Set:
-
-isEmailVerified = true
-
-Remove verification token
-
-Return success response.
+* Check email + password
+* Generate access + refresh tokens
+* Send via cookies
 
 ---
 
-# 9. Login Flow
+### 10. Token System
 
-Endpoint:
-
-POST /api/v1/auth/login
-
-Flow:
-
-Client → validation middleware → login controller
-
-Controller:
-
-Extract email and password
-
-Find user using email
-
-Compare password with hashed password in database
-
-If valid:
-
-Generate:
-
-accessToken
-
-refreshToken
-
-Send tokens as HTTP-only cookies.
+* Access → short (API auth)
+* Refresh → long (get new access)
 
 ---
 
-# 10. Token System
+### 11. Forgot Password
 
-Two tokens are used.
+POST `/forgot-password`
 
-## Access Token
-
-Short lived
-
-Used for authenticating API requests.
-
-## Refresh Token
-
-Long lived
-
-Used to generate new access tokens.
-
-Flow:
-
-Access token expires → client sends refresh token → server verifies
-refresh token → server generates new tokens
+* Generate reset token
+* Store hashed
+* Send email link
 
 ---
 
-# 11. Forgot Password Flow
+### 12. Reset Password
 
-User clicks:
+POST `/reset-password/:token`
 
-Forgot Password
-
-Client calls:
-
-POST /forgot-password
-
-Body:
-
-email
-
-Server:
-
-Find user using email
-
-Generate password reset token
-
-Token generator returns:
-
-rawToken
-
-hashedToken
-
-expiry
-
-Store in DB:
-
-forgotPasswordToken
-
-forgotPasswordExpiry
-
-Send email with reset link:
-
-client/reset-password/RAW_TOKEN
+* Verify token + expiry
+* Update password
 
 ---
 
-# 12. Reset Password Flow
+### 13. Current User
 
-User clicks reset password link.
+GET `/current-user`
 
-Flow:
-
-User enters new password
-
-Client calls:
-
-POST /reset-password/:token
-
-Server:
-
-Extract token
-
-Hash token
-
-Find user where:
-
-forgotPasswordToken = hashedToken
-
-AND
-
-expiry \> current time
-
-If valid:
-
-Update password
-
-Remove reset token fields
-
-Return response:
-
-Password reset successful
+* Verify token
+* Return user (no sensitive data)
 
 ---
 
-# 13. Get Current User
+### 14. Change Password
 
-Endpoint:
+POST `/change-password`
 
-GET /current-user
-
-Flow:
-
-Client sends access token in Authorization header.
-
-Server:
-
-Verify JWT
-
-Decode token
-
-Extract userId
-
-Find user from database
-
-Remove sensitive fields
-
-Return user object.
+* Check old password
+* Update new
 
 ---
 
-# 14. Change Password
+### 15. Logout
 
-Endpoint:
+POST `/logout`
 
-POST /change-password
-
-Body:
-
-oldPassword
-
-newPassword
-
-Flow:
-
-Verify access token
-
-Decode token
-
-Get userId
-
-Find user
-
-Compare oldPassword
-
-If correct:
-
-Update password
-
-Return success response.
+* Remove refresh token
+* Clear cookies
 
 ---
 
-# 15. Logout Flow
+### 16. Delete User
 
-Endpoint:
-
-POST /logout
-
-Browser automatically sends cookies:
-
-accessToken
-
-refreshToken
-
-Server:
-
-Extract refreshToken
-
-Verify refreshToken
-
-Decode token
-
-Get userId
-
-Remove refreshToken from database
-
-Clear cookies
-
-Send response:
-
-Logout successful
+* Verify token + password
+* Delete user
+* Clear tokens
 
 ---
 
-# 16. Delete User
+### 17. Admin Routes
 
-Flow:
-
-User clicks delete account
-
-Client sends request with:
-
-accessToken (header)
-
-password (body)
-
-Server:
-
-Verify token
-
-Get userId
-
-Find user
-
-Verify password
-
-Delete user document
-
-Clear tokens
-
-Return success response.
+Example: `/users`
+Flow: verifyJWT → verifyRole("admin") → controller
 
 ---
 
-# 17. Admin Protected Routes
+### 18. Security
 
-Example:
-
-GET /api/v1/users
-
-Middleware chain:
-
-verifyJWT → verifyRole("admin") → controller
-
-Controller returns:
-
-- user count
-- user emails
-- verification status
-
-Only admin can access this route.
+* bcrypt hashing
+* JWT auth
+* HTTP-only cookies
+* Email verification
+* Hashed tokens in DB
 
 ---
 
-# 18. Security Measures
+### 19. Example Flow
 
-Security decisions implemented:
-
-- Password hashing using bcrypt
-- JWT authentication
-- Access and Refresh token system
-- HTTP-only cookies for tokens
-- Email verification before login
-- Hashed tokens stored in database
+GET `/healthcheck`
+Client → route → middleware → controller → response
 
 ---
 
-# 19. Example Request Flow
+---
 
-Example endpoint:
-
-GET /api/v1/healthcheck
-
-Flow:
-
-Client → app.js → health.route.js → verifyJWT → verifyRole("admin") →
-health controller → response
+If you want, I can make this into:
+👉 1-page cheat sheet
+👉 or viva explanation script (very useful for placements)
