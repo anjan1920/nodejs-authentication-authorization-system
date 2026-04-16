@@ -1,14 +1,54 @@
+# 🔐 Authentication & Authorization System (Dev Version)
+
+A full-stack authentication and authorization system built using **Node.js, Express.js, MongoDB, and JWT**.
+
+This project implements a complete authentication lifecycle including **email verification, access & refresh token handling, password reset, and role-based access control**.
 
 ---
 
-# Authentication & Authorization System
+# 🚧 Project Version (Important)
 
-A **full-stack authentication and authorization system** built with  **Node.js, Express.js, MongoDB, and JWT** .
-Implements a complete authentication lifecycle including  **email verification, access & refresh token rotation, password reset, and role-based access control** .
+This repository represents the **Development Version** of the system.
+
+It focuses on:
+
+* Core authentication logic
+* Clean backend architecture
+* Understanding of authentication flows
+
+⚠️ This version is intentionally simplified for development clarity.
+For production-grade security and scalability features, refer to the deployment version below.
 
 ---
 
-# Tech Stack
+# 🚀 Production / Deployment Version
+
+👉 https://github.com/anjan1920/auth-system-backend
+
+The production version includes advanced real-world features such as:
+
+### 🔒 Security Enhancements
+
+* Redis-based session management
+* Rate limiting (prevents brute-force attacks)
+* Improved secure logout handling
+
+### 📧 External Services
+
+* Brevo email API integration for:
+
+  * Email verification
+  * Password reset workflows
+
+### ⚙️ Production Readiness
+
+* Stronger validation & error handling
+* Scalable architecture decisions
+* Environment-based configurations
+
+---
+
+# 🧰 Tech Stack
 
 ### Backend
 
@@ -23,214 +63,143 @@ Implements a complete authentication lifecycle including  **email verification, 
 * Tailwind CSS
 * JavaScript (Fetch API)
 
-### Security & Authentication
-
-* JWT (Access Token + Refresh Token)
-* Refresh Token Rotation
-* bcrypt (password hashing)
-* HTTP-only cookies
-
-### Email Service
-
-* Nodemailer (development)
-* Brevo SMTP (production)
-
 ---
 
-# Features
+# ✨ Features
 
-### Authentication
+## 🔑 Authentication
 
 * User registration
-* Email verification
-* Login with JWT authentication
+* Email verification (dev: link in terminal)
+* JWT-based login
 * Access Token + Refresh Token
-* Refresh Token rotation
+* Refresh token rotation
 * Logout with token invalidation
 
-### Account Management
+## 👤 Account Management
 
 * Forgot password
 * Reset password
 * Change password
 * Get current logged-in user
 
-### Authorization
+## 🛡️ Authorization
 
 * Role-based access control (Admin / User)
 * Protected routes using middleware
 * Admin endpoint to fetch all users
 
-### Security
+## 🔐 Security
 
 * Password hashing using bcrypt
-* Secure HTTP-only cookie storage
-* Token expiration
+* HTTP-only cookie storage
+* Token expiration handling
 * Input validation using express-validator
 
 ---
 
-# Application Flow
+# 🔄 Application Flow
 
-### Registration
+## Registration
 
-```
 User Register
 → Validate input
 → Save user in DB
 → Generate email verification token
-→ Send verification email
-```
+→ Display link in terminal
 
-### Email Verification
+## Email Verification
 
-```
 User clicks verification link
-→ Frontend extracts token
 → Backend verifies token
 → Email marked as verified
-```
 
-### Login
+## Login
 
-```
 User login
 → Verify password
-→ Generate Access Token + Refresh Token
-→ Send tokens in HTTP-only cookies
-```
+→ Generate Access + Refresh tokens
+→ Send tokens via HTTP-only cookies
 
-### Access Protected Routes
+## Protected Routes
 
-```
 Request
 → verifyJWT middleware
 → verifyRole middleware
 → Controller executes
-```
 
-### Refresh Token
+## Refresh Token
 
-```
-Access Token expires
+Access token expires
 → Client sends refresh token
-→ Server verifies token
-→ Generates new Access + Refresh tokens
-```
+→ Server verifies
+→ New tokens generated
 
-### Logout
+## Logout
 
-```
 User logout
 → Clear cookies
 → Remove refresh token from DB
-```
 
 ---
 
-# API Endpoints
+# 📡 API Endpoints
 
 ## Authentication
 
-| Method | Endpoint                               | Description               |
-| ------ | -------------------------------------- | ------------------------- |
-| POST   | `/api/v1/auth/register`              | Register new user         |
-| POST   | `/api/v1/auth/login`                 | User login                |
-| POST   | `/api/v1/auth/logout`                | Logout user               |
-| POST   | `/api/v1/auth/refresh-token`         | Generate new access token |
-| POST   | `/api/v1/auth/forgot-password`       | Send password reset email |
-| POST   | `/api/v1/auth/reset-password/:token` | Reset password            |
-| GET    | `/api/v1/auth/verify-email/:token`   | Verify user email         |
-| POST   | `/api/v1/auth/resend-verification`   | Resend verification email |
-
----
+* POST `/api/v1/auth/register`
+* POST `/api/v1/auth/login`
+* POST `/api/v1/auth/logout`
+* POST `/api/v1/auth/refresh-token`
+* POST `/api/v1/auth/forgot-password`
+* POST `/api/v1/auth/reset-password/:token`
+* GET `/api/v1/auth/verify-email/:token`
+* POST `/api/v1/auth/resend-verification`
 
 ## User
 
-| Method | Endpoint                          | Description                |
-| ------ | --------------------------------- | -------------------------- |
-| GET    | `/api/v1/users/current-user`    | Get current logged-in user |
-| POST   | `/api/v1/users/change-password` | Change user password       |
-| DELETE | `/api/v1/users/delete-me`       | Delete user account        |
-
----
+* GET `/api/v1/users/current-user`
+* POST `/api/v1/users/change-password`
+* DELETE `/api/v1/users/delete-me`
 
 ## Admin
 
-| Method | Endpoint                      | Description              |
-| ------ | ----------------------------- | ------------------------ |
-| GET    | `/api/v1/admin/login`       | Admin login              |
-| GET    | `/api/v1/admin/healthcheck` | Check server health      |
-| GET    | `/api/v1/admin/getAllUsers` | Get all registered users |
-
----
+* GET `/api/v1/admin/login`
+* GET `/api/v1/admin/healthcheck`
+* GET `/api/v1/admin/getAllUsers`
 
 ## System
 
-| Method | Endpoint         | Description      |
-| ------ | ---------------- | ---------------- |
-| GET    | `/api/v1/home` | Basic test route |
+* GET `/api/v1/home`
 
 ---
 
-# API Testing
+# 🧪 API Testing
 
-All API endpoints were tested using **Postman** during development.
+All APIs tested using **Postman**
 
 ---
 
-# Project Structure
+# 📁 Project Structure
 
-```
-backend
-│
+backend/
 ├── src
-│   │
-│   ├── controllers              # business logic for routes
-│   │   ├── admin.Controller.Login.js
-│   │   ├── auth.controllers.js
-│   │   ├── getAllUsers.controllers.js
-│   │   └── healthcheck.controllers.js
-│   │
+│   ├── controllers
 │   ├── db
-│   │   └── index.js              # MongoDB connection setup
-│   │
-│   ├── middlewares               # authentication & validation middlewares
-│   │   ├── auth.middleware.js
-│   │   ├── role.middleware.js
-│   │   └── validator.middleware.js
-│   │
+│   ├── middlewares
 │   ├── models
-│   │   └── user.models.js        # user schema
-│   │
-│   ├── routes                    # API route definitions
-│   │   ├── admin.routes.js
-│   │   ├── auth.routes.js
-│   │   └── healthcheck.routes.js
-│   │
-│   ├── utils                     # reusable helpers
-│   │   ├── api-error.js
-│   │   ├── api-response.js
-│   │   ├── async-handler.js
-│   │   └── mail.js
-│   │
+│   ├── routes
+│   ├── utils
 │   └── validators
-│       └── index.js              # request validation rules
-│
-├── app.js                        # express app configuration
-├── index.js                      # server entry point
-└── .env                          # environment variables
-```
+├── app.js
+├── index.js
+└── .env
 
 ---
 
-# Environment Variables
+# ⚙️ Environment Variables
 
-Create a `.env` file:
-
-```
 PORT=
-
 MONGO_PASS=
 MONGO_USER_ID=
 MONGO_URI=
@@ -242,56 +211,26 @@ ACCESS_TOKEN_EXPIRY=15m
 
 REFRESH_TOKEN_SECRET=
 REFRESH_TOKEN_EXPIRY=10d
-```
 
 ---
 
-# Installation
+# ⚡ Installation
 
-### Clone the repository
-
-```
 git clone https://github.com/anjan1920/nodejs-authentication-authorization-system
-```
 
----
-
-### Backend Setup
-
-```
 npm install
-node index.js or npm run dev
-```
+npm run dev
 
 ---
 
-### Frontend Setup
+# 💻 Development Note
 
-Navigate to frontend directory:
-
-```
-cd frontend
-```
-
-Run Tailwind CLI:
-
-```
-npx @tailwindcss/cli -i ./src/input.css -o ./src/output.css --watch
-```
+* Email verification and password reset links appear in the **server terminal**
+* Use **Ctrl + Click** to open links in browser
 
 ---
 
-### Development Note
-
-This repository runs in  **development mode** .
-Email verification and password reset links will appear in the  **server terminal** .
-
-Open the link using  **Ctrl + Click** , then click **Verify** to continue to the frontend.
-
----
-
-# Author
+# 👨‍💻 Author
 
 **Anjan Das**
-LinkedIn:
-[https://www.linkedin.com/in/anjan-das-22b278236](https://www.linkedin.com/in/anjan-das-22b278236)
+LinkedIn: https://www.linkedin.com/in/anjan-das-22b278236
