@@ -180,57 +180,35 @@ All APIs tested using **Postman**
 
 ---
 
-# 📁 Project Structure
+# ⚙️ Complete Setup Guide (Development Version)
+
+This guide will help you run the project locally.
+
+---
+
+## 📁 Project Structure
 
 authentication-authorization-dev/
 │
 ├── backend/
 │   │
 │   ├── src/
-│   │   │
-│   │   ├── controllers/              # Handles business logic
-│   │   │   ├── auth.controllers.js
-│   │   │   ├── admin.controller.js
-│   │   │   ├── user.controller.js
-│   │   │   └── healthcheck.controller.js
-│   │   │
-│   │   ├── routes/                   # API route definitions
-│   │   │   ├── auth.routes.js
-│   │   │   ├── user.routes.js
-│   │   │   ├── admin.routes.js
-│   │   │   └── healthcheck.routes.js
-│   │   │
-│   │   ├── middlewares/              # Custom middlewares
-│   │   │   ├── auth.middleware.js
-│   │   │   ├── role.middleware.js
-│   │   │   └── validator.middleware.js
-│   │   │
-│   │   ├── models/                  # Database schemas
-│   │   │   └── user.model.js
-│   │   │
-│   │   ├── validators/              # Validation rules
-│   │   │   └── index.js
-│   │   │
-│   │   ├── db/                      # Database connection
-│   │   │   └── index.js
-│   │   │
-│   │   ├── utils/                   # Utility/helper functions
-│   │   │   ├── api-error.js
-│   │   │   ├── api-response.js
-│   │   │   ├── async-handler.js
-│   │   │   └── mail.js              # Dev: logs email links in console
-│   │   │
-│   │   └── constants/ (optional)    # (Recommended)
-│   │       └── roles.js
+│   │   ├── controllers/
+│   │   ├── routes/
+│   │   ├── middlewares/
+│   │   ├── models/
+│   │   ├── validators/
+│   │   ├── db/
+│   │   ├── utils/
+│   │   
 │   │
-│   ├── app.js                      # Express app config
-│   ├── index.js                    # Server entry point
-│   └── .env                        # Environment variables
+│   ├── app.js
+│   ├── index.js
+│   └── .env
 │
-├── frontend/ (optional UI)
+├── frontend/ (optional)
 │   ├── src/
-│   ├── index.html
-│   └── tailwind config
+│   └── index.html
 │
 ├── package.json
 ├── README.md
@@ -238,18 +216,24 @@ authentication-authorization-dev/
 
 ---
 
-⚙️ Setup Guide (Clean & Interview Ready)
+## 🚀 Backend Setup
 
+### 1. Clone the Repository
 
-⚡ Backend Setup
-1. Clone Repository
 git clone https://github.com/anjan1920/authentication-authorization-dev
 cd authentication-authorization-dev
-2. Install Dependencies
-npm install
-3. Setup Environment Variables
 
-Create a .env file inside backend/:
+---
+
+### 2. Install Dependencies
+
+npm install
+
+---
+
+### 3. Environment Variables
+
+Create a `.env` file inside the `backend/` directory:
 
 PORT=5000
 
@@ -262,28 +246,42 @@ REFRESH_TOKEN_SECRET=your_refresh_secret
 REFRESH_TOKEN_EXPIRY=10d
 
 JWT_SECRET=your_jwt_secret
-4. Run the Server
+
+---
+
+### 4. Run the Server
+
 npm run dev
 
-or
+OR
 
 node backend/index.js
-🎨 Frontend Setup (Optional)
+
+---
+
+## 🎨 Frontend Setup (Optional)
+
 cd frontend
+
 npm install
 
-Run Tailwind:
+Run Tailwind CSS:
 
 npx @tailwindcss/cli -i ./src/input.css -o ./src/output.css --watch
-💡 Development Notes (IMPORTANT SECTION)
 
-Add this — this clears interviewer confusion:
-
-- This is a development version of the project
-- Email verification and password reset links are logged in the server console
-- No external email service (like Brevo) is used in this version
-- No Redis or rate limiting is implemented here (available in production version)
 ---
+
+
+---
+
+## 💡 Development Notes
+
+* This is the **development version** of the project
+* Email verification & password reset links are printed in the **server console**
+
+
+---
+
 
 # 👨‍💻 Author
 
