@@ -184,29 +184,29 @@ All APIs tested using **Postman**
 
 ## 📁 Project Structure
 
-authentication-authorization-dev/
-│
-├── backend/
-│   ├── src/
-│   │   ├── controllers/
-│   │   ├── routes/
-│   │   ├── middlewares/
-│   │   ├── models/
-│   │   ├── validators/
-│   │   ├── db/
-│   │   ├── utils/
-│   │
-│   ├── app.js
-│   ├── index.js
-│   └── .env
-│
-├── frontend/ (optional)
-│   ├── src/
-│   └── index.html
-│
-├── package.json
-├── README.md
-└── .gitignore
+  authentication-authorization-dev/
+  │
+  ├── backend/
+  │   ├── src/
+  │   │   ├── controllers/
+  │   │   ├── routes/
+  │   │   ├── middlewares/
+  │   │   ├── models/
+  │   │   ├── validators/
+  │   │   ├── db/
+  │   │   ├── utils/
+  │   │
+  │   ├── app.js
+  │   ├── index.js
+  │   └── .env
+  │
+  ├── frontend/ (optional)
+  │   ├── src/
+  │   └── index.html
+  │
+  ├── package.json
+  ├── README.md
+  └── .gitignore
 
 ---
 
