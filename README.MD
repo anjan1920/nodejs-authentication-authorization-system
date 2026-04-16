@@ -182,52 +182,107 @@ All APIs tested using **Postman**
 
 # 📁 Project Structure
 
-backend/
-├── src
-│   ├── controllers
-│   ├── db
-│   ├── middlewares
-│   ├── models
-│   ├── routes
-│   ├── utils
-│   └── validators
-├── app.js
-├── index.js
-└── .env
+authentication-authorization-dev/
+│
+├── backend/
+│   │
+│   ├── src/
+│   │   │
+│   │   ├── controllers/              # Handles business logic
+│   │   │   ├── auth.controllers.js
+│   │   │   ├── admin.controller.js
+│   │   │   ├── user.controller.js
+│   │   │   └── healthcheck.controller.js
+│   │   │
+│   │   ├── routes/                   # API route definitions
+│   │   │   ├── auth.routes.js
+│   │   │   ├── user.routes.js
+│   │   │   ├── admin.routes.js
+│   │   │   └── healthcheck.routes.js
+│   │   │
+│   │   ├── middlewares/              # Custom middlewares
+│   │   │   ├── auth.middleware.js
+│   │   │   ├── role.middleware.js
+│   │   │   └── validator.middleware.js
+│   │   │
+│   │   ├── models/                  # Database schemas
+│   │   │   └── user.model.js
+│   │   │
+│   │   ├── validators/              # Validation rules
+│   │   │   └── index.js
+│   │   │
+│   │   ├── db/                      # Database connection
+│   │   │   └── index.js
+│   │   │
+│   │   ├── utils/                   # Utility/helper functions
+│   │   │   ├── api-error.js
+│   │   │   ├── api-response.js
+│   │   │   ├── async-handler.js
+│   │   │   └── mail.js              # Dev: logs email links in console
+│   │   │
+│   │   └── constants/ (optional)    # (Recommended)
+│   │       └── roles.js
+│   │
+│   ├── app.js                      # Express app config
+│   ├── index.js                    # Server entry point
+│   └── .env                        # Environment variables
+│
+├── frontend/ (optional UI)
+│   ├── src/
+│   ├── index.html
+│   └── tailwind config
+│
+├── package.json
+├── README.md
+└── .gitignore
 
 ---
 
-# ⚙️ Environment Variables
+⚙️ Setup Guide (Clean & Interview Ready)
 
-PORT=
-MONGO_PASS=
-MONGO_USER_ID=
-MONGO_URI=
 
-JWT_SECRET=
+⚡ Backend Setup
+1. Clone Repository
+git clone https://github.com/anjan1920/authentication-authorization-dev
+cd authentication-authorization-dev
+2. Install Dependencies
+npm install
+3. Setup Environment Variables
 
-ACCESS_TOKEN_SECRET=
+Create a .env file inside backend/:
+
+PORT=5000
+
+MONGO_URI=your_mongodb_connection_string
+
+ACCESS_TOKEN_SECRET=your_access_secret
 ACCESS_TOKEN_EXPIRY=15m
 
-REFRESH_TOKEN_SECRET=
+REFRESH_TOKEN_SECRET=your_refresh_secret
 REFRESH_TOKEN_EXPIRY=10d
 
----
-
-# ⚡ Installation
-
-git clone https://github.com/anjan1920/nodejs-authentication-authorization-system
-
-npm install
+JWT_SECRET=your_jwt_secret
+4. Run the Server
 npm run dev
 
----
+or
 
-# 💻 Development Note
+node backend/index.js
+🎨 Frontend Setup (Optional)
+cd frontend
+npm install
 
-* Email verification and password reset links appear in the **server terminal**
-* Use **Ctrl + Click** to open links in browser
+Run Tailwind:
 
+npx @tailwindcss/cli -i ./src/input.css -o ./src/output.css --watch
+💡 Development Notes (IMPORTANT SECTION)
+
+Add this — this clears interviewer confusion:
+
+- This is a development version of the project
+- Email verification and password reset links are logged in the server console
+- No external email service (like Brevo) is used in this version
+- No Redis or rate limiting is implemented here (available in production version)
 ---
 
 # 👨‍💻 Author
